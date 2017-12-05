@@ -1,7 +1,7 @@
 package com.epam.page.object.generator;
 
 import com.epam.page.object.generator.errors.ValidationException;
-import com.epam.page.object.generator.errors.XpathToCssTransformerException;
+import com.epam.page.object.generator.errors.LocatorTransformationException;
 import com.epam.page.object.generator.model.SearchRule;
 import com.epam.page.object.generator.parser.JsonRuleMapper;
 import com.epam.page.object.generator.validators.ValidatorsStarter;
@@ -37,14 +37,14 @@ public class PageObjectsGenerator {
     }
 
     public void generate()
-        throws IOException, URISyntaxException, XpathToCssTransformerException {
+        throws IOException, URISyntaxException, LocatorTransformationException {
         List<SearchRule> searchRules = parser.getRulesFromJSON();
         List<SearchRule> validSearchRules = validatorsStarter.validate(searchRules, urls);
         generateJavaFiles(validSearchRules);
     }
 
     private void generateJavaFiles(List<SearchRule> searchRules)
-        throws IOException, URISyntaxException, XpathToCssTransformerException {
+        throws IOException, URISyntaxException, LocatorTransformationException {
 
         if (validatorsStarter.getValidationContext().hasInvalidRules()) {
             if (forceGenerateFile) {

@@ -18,12 +18,12 @@ import com.epam.jdi.uitests.web.selenium.elements.composite.WebSite;
 import com.epam.jdi.uitests.web.selenium.elements.pageobjects.annotations.JPage;
 import com.epam.jdi.uitests.web.selenium.elements.pageobjects.annotations.JSite;
 import com.epam.page.object.generator.containers.SupportedTypesContainer;
-import com.epam.page.object.generator.errors.XpathToCssTransformerException;
+import com.epam.page.object.generator.errors.LocatorTransformationException;
 import com.epam.page.object.generator.model.UIElement;
 import com.epam.page.object.generator.model.SearchRule;
 import com.epam.page.object.generator.utils.SearchRuleType;
 import com.epam.page.object.generator.utils.SearchRuleTypeGroups;
-import com.epam.page.object.generator.utils.XpathToCssTransformation;
+import com.epam.page.object.generator.utils.LocatorTransformation;
 import com.epam.page.object.generator.writer.JavaFileWriter;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
@@ -45,24 +45,27 @@ public class JavaPoetAdapter implements JavaFileWriter {
 
     private SupportedTypesContainer supportedTypesContainer;
 
-    private XpathToCssTransformation xpathToCssTransformation;
+    private LocatorTransformation locatorTransformation;
 
     public JavaPoetAdapter(SupportedTypesContainer supportedTypesContainer,
-                           XpathToCssTransformation xpathToCssTransformation) {
+                           LocatorTransformation locatorTransformation) {
         this.supportedTypesContainer = supportedTypesContainer;
-        this.xpathToCssTransformation = xpathToCssTransformation;
+        this.locatorTransformation = locatorTransformation;
     }
 
     private TypeSpec buildPageClass(List<SearchRule> searchRules, String url)
-        throws IOException, XpathToCssTransformerException {
+        throws IOException, LocatorTransformationException {
         String pageClassName = firstLetterUp(splitCamelCase(getPageTitle(url)));
 
         List<FieldSpec> fields = new ArrayList<>();
 
         for (SearchRule searchRule : searchRules) {
             Elements elements = searchRule.extractElementsFromWebSite(url);
-            if (elements != null && elements.size() == 1) {
-                fields.add(createField(searchRule, elements.first()));
+//            searchRule.getRequiredValueFromFoundElement(elements);
+            if (elements != null) {
+                for (Element element : elements) {
+                    fields.add(createField(searchRule, element));
+                }
             }
         }
         return buildTypeSpec(pageClassName, WebPage.class, fields, PUBLIC);
@@ -70,7 +73,7 @@ public class JavaPoetAdapter implements JavaFileWriter {
 
 
     private TypeSpec buildFormClass(SearchRule searchRule, String url)
-        throws IOException, XpathToCssTransformerException {
+        throws IOException, LocatorTransformationException {
         Class superClass;
 
         List<FieldSpec> fields = getFieldsFromParentElements(searchRule,
@@ -84,7 +87,7 @@ public class JavaPoetAdapter implements JavaFileWriter {
 
     private List<FieldSpec> getFieldsFromParentElements(SearchRule searchRule,
                                                         Elements parentElements)
-        throws IOException, XpathToCssTransformerException {
+        throws IOException, LocatorTransformationException {
 
         List<FieldSpec> fields = new ArrayList<>();
 
@@ -101,7 +104,7 @@ public class JavaPoetAdapter implements JavaFileWriter {
     }
 
     private AnnotationMember getAnnotationMemberFromRule(SearchRule searchRule, Element element)
-        throws XpathToCssTransformerException, IOException {
+        throws LocatorTransformationException, IOException {
         AnnotationMember annotationMember = null;
 
         if (searchRule.getRequiredValueFromFoundElement(element) == null) {
@@ -111,13 +114,18 @@ public class JavaPoetAdapter implements JavaFileWriter {
             if (searchRule.getUniqueness() == null || !searchRule.getUniqueness()
                 .equalsIgnoreCase("text")) {
                 if (searchRule.getCss() == null) {
-                    xpathToCssTransformation.transformRule(searchRule);
+                    locatorTransformation.xpathToCssTransformRule(searchRule);
                 }
                 annotationMember = new AnnotationMember("css", "$S",
                     resultCssSelector(searchRule, elementRequiredValue));
             } else {
+                SearchRule searchRuleWithXpath = new SearchRule();
+                searchRuleWithXpath.setXpath(new LocatorTransformation().cssToXpathTransformRule(searchRule.getCss()));
+                searchRuleWithXpath.setUniqueness(searchRule.getUniqueness());
                 annotationMember = new AnnotationMember("xpath", "$S",
-                    resultXpathSelector(searchRule, elementRequiredValue));
+                        resultXpathSelector(searchRuleWithXpath, elementRequiredValue));
+//                annotationMember = new AnnotationMember("css", "$S",
+//                        resultCssSelector(searchRule, elementRequiredValue));
             }
         }
         return annotationMember;
@@ -173,7 +181,7 @@ public class JavaPoetAdapter implements JavaFileWriter {
 
     private AnnotationSpec createCommonAnnotation(SearchRule searchRule, Element element,
                                                   Class fieldAnnotationClass)
-        throws IOException, XpathToCssTransformerException {
+        throws IOException, LocatorTransformationException {
         String requiredValue = searchRule.getRequiredValueFromFoundElement(element);
         if ((requiredValue != null) && (!requiredValue.isEmpty())) {
             AnnotationMember commonElementAnnotationMember = getAnnotationMemberFromRule(
@@ -187,7 +195,7 @@ public class JavaPoetAdapter implements JavaFileWriter {
 
     private AnnotationSpec createComplexAnnotation(SearchRule searchRule, Element element,
                                                    Class fieldAnnotationClass)
-        throws IOException, XpathToCssTransformerException {
+        throws IOException, LocatorTransformationException {
         List<AnnotationMember> innerAnnotations = new ArrayList<>();
 
         for (SearchRule innerSearchRule : searchRule.getInnerSearchRules()) {
@@ -208,7 +216,7 @@ public class JavaPoetAdapter implements JavaFileWriter {
                                                          List<AnnotationMember> innerAnnotations,
                                                          SearchRule innerSearchRule,
                                                          String annotationElementName)
-        throws XpathToCssTransformerException, IOException {
+        throws LocatorTransformationException, IOException {
         AnnotationMember innerAnnotationMember = getAnnotationMemberFromRule(
             innerSearchRule,
             element);
@@ -234,7 +242,7 @@ public class JavaPoetAdapter implements JavaFileWriter {
     }
 
     private FieldSpec createField(SearchRule searchRule, Element element)
-        throws IOException, XpathToCssTransformerException {
+        throws IOException, LocatorTransformationException {
         UIElement currentElementPair = supportedTypesContainer
             .getSupportedTypesMap().get(searchRule.getType());
         Class fieldClass = currentElementPair.getUIClass();
@@ -329,7 +337,7 @@ public class JavaPoetAdapter implements JavaFileWriter {
     @Override
     public void writeFile(String packageName, String outputDir, List<SearchRule> searchRules,
                           List<String> urls)
-        throws IOException, URISyntaxException, XpathToCssTransformerException {
+        throws IOException, URISyntaxException, LocatorTransformationException {
         JavaFile javaFile;
 
         String sitePackageName = packageName + ".site";

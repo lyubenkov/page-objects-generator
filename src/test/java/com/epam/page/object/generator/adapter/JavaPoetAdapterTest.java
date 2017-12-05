@@ -3,7 +3,7 @@ package com.epam.page.object.generator.adapter;
 import static org.junit.Assert.assertTrue;
 
 import com.epam.page.object.generator.containers.SupportedTypesContainer;
-import com.epam.page.object.generator.utils.XpathToCssTransformation;
+import com.epam.page.object.generator.utils.LocatorTransformation;
 import com.google.common.collect.Lists;
 import java.io.File;
 import org.junit.Before;
@@ -18,7 +18,7 @@ public class JavaPoetAdapterTest {
 
     @Before
     public void setUp() throws Exception {
-        sut = new JavaPoetAdapter(new SupportedTypesContainer(), new XpathToCssTransformation());
+        sut = new JavaPoetAdapter(new SupportedTypesContainer(), new LocatorTransformation());
     }
 
     @Test

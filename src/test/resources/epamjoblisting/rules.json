@@ -1,0 +1,37 @@
+{
+  "elements": [
+    {
+      "type": "TextField",
+      "uniqueness": "placeholder",
+      "css":"input.text-field"
+    },
+    {
+      "type":"Button",
+      "uniqueness":"text",
+      "css":"button[type=submit]"
+    },
+    {
+      "type": "Dropdown",
+      "uniqueness":"data-placeholder",
+      "css": "select",
+      "innerSearchRules": [
+        {
+          "title": "root",
+          "css": ".location-column"
+        },
+        {
+          "title": "list",
+          "css": "*root*li.option"
+        },
+        {
+          "title": "expand",
+          "css": ".arrow"
+        },
+        {
+          "title": "value",
+          "css": ".rendered"
+        }
+      ]
+    }
+  ]
+}

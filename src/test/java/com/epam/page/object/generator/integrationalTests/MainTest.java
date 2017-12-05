@@ -6,7 +6,7 @@ import com.epam.page.object.generator.containers.SupportedTypesContainer;
 import com.epam.page.object.generator.errors.NotValidUrlException;
 import com.epam.page.object.generator.errors.ValidationException;
 import com.epam.page.object.generator.parser.JsonRuleMapper;
-import com.epam.page.object.generator.utils.XpathToCssTransformation;
+import com.epam.page.object.generator.utils.LocatorTransformation;
 import com.epam.page.object.generator.validators.ValidatorsStarter;
 import java.io.File;
 import java.io.IOException;
@@ -44,9 +44,9 @@ public class MainTest {
 
         JsonRuleMapper parser = new JsonRuleMapper(new File(jsonPath), new ObjectMapper());
 
-        XpathToCssTransformation xpathToCssTransformation = new XpathToCssTransformation();
+        LocatorTransformation locatorTransformation = new LocatorTransformation();
 
-        JavaPoetAdapter javaPoetAdapter = new JavaPoetAdapter(bc, xpathToCssTransformation);
+        JavaPoetAdapter javaPoetAdapter = new JavaPoetAdapter(bc, locatorTransformation);
 
         ValidatorsStarter validatorsStarter = new ValidatorsStarter(bc);
         validatorsStarter.setCheckLocatorsUniqueness(checkLocatorUniqueness);

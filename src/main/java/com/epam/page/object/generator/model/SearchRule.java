@@ -83,7 +83,7 @@ public class SearchRule {
 
     }
 
-     private String getValueFromUniquenessAttribute(Element element,
+    private String getValueFromUniquenessAttribute(Element element,
                                                          String uniqueness) {
         return uniqueness.equals("text")
             ? element.text()
